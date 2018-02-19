@@ -1,0 +1,128 @@
+import pygame
+import numpy as np
+import random
+import sys
+import time
+
+screen_size = (1200,700)
+resolution = 10
+cols = int(screen_size[0]/resolution)
+rows = int(screen_size[1]/resolution)
+WHITE = (255,255,255)
+BLACK = (0,0,0)
+ready = False
+num = 0
+
+board = np.ndarray((cols,rows))
+
+def count_neighbors(array,x,y):
+    neigh = 0
+    for i in [-1,0,1]:
+        for j in [-1,0,1]:
+            if i == j == 0:
+                neigh += 0
+            elif (x+i) < 0 or (y+j) < 0:
+                neigh += 0
+            else:
+                try:
+                    neigh += array[x+i][y+j]
+                except IndexError:
+                    neigh += 0
+    return neigh
+
+print('##'*19,'INSTRUCCIONES','##'*19)
+print('Presion ESC o cierra la ventana para terminar el juego')
+print('---'*30)
+print('Inserta los parametros en el siguiente orden y separados por '
+      'una coma -> tiempo,poblacion')
+print('---'*30)
+print('* tiempo es el tiempo de actualización de la pantalla en milisegundos')
+print('* poblacion es un número entre 0 y 1 que dicta el porcentaje de la '
+      'poblacion viva inicial')
+print('---'*30)
+print('')
+
+
+while not ready:
+    try:
+        t,p = map(float,input('Inserta parametros: ').split(','))
+        if t < 0:
+            print(ValueError('No hay tiempos negativos mija. ¬¬'))
+            print('Vuelve a intentar.')
+            num += 1
+            continue
+        if p > 1 or p < 0:
+            num += 1
+            print(ValueError('Testoy diciendo que lapoblacion es entre 0  y '
+                             '1'))
+            continue
+
+        ready = True
+    except ValueError:
+        num += 1
+        print('Algo andas haciendo mal amor, checale bien.')
+        print('Vuelve a intentar.')
+
+    if num > 3:
+        print('Ay ya me harte. Bye. ¬¬')
+        sys.exit()
+
+t = t/1000.0
+
+for i in range(cols):
+    for j in range(rows):
+        if random.random() > 1-p:
+            board[i][j] = 1.0
+        else:
+            board[i][j] = 0.0
+
+pygame.init()
+screen = pygame.display.set_mode(screen_size)
+pygame.display.set_caption("Game of Life")
+
+running = True
+
+h = 0
+
+while True:
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+			print('Gracias por jugar mi juego. ¡TE AMO!')
+            pygame.quit()
+            sys.exit()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+				print('Gracias por jugar mi juego. ¡TE AMO!')
+                pygame.quit()
+                sys.exit()
+
+    events = pygame.event.get()
+    for i in range(cols):
+        for j in range(rows):
+            x = i*resolution
+            y = j*resolution
+            if board[i][j] == 1.0:
+                color = WHITE
+            elif board[i][j] == 0.0:
+                color = BLACK
+
+            area = (i*resolution,j*resolution,resolution-1,resolution-1)
+            pygame.draw.rect(screen,color,area,0)
+
+            #rules of game
+            neighbors = count_neighbors(board, i, j)
+            state = board[i][j]
+            if state == 0.0 and neighbors == 3:
+                board[i][j] = 1.0
+            elif state == 1.0 and (neighbors < 2 or neighbors > 3):
+                board[i][j] = 0.0
+            else:
+                board[i][j] = state
+
+    pygame.display.update()
+    time.sleep(t)
+
+
+
+
